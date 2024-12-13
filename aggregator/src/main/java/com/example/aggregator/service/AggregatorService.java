@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class AggregatorService {
@@ -47,6 +49,38 @@ public class AggregatorService {
         common.removeIf(entry -> !entry.getWord().contains(chars));
 
         return common;
+    }
+
+    public List<Entry> getAllPalindromes(){
+
+        final List<Entry> candidates = new ArrayList<>();
+
+        IntStream.range('a', '{')
+                .mapToObj(i -> Character.toString(i))
+                .forEach(c -> {
+
+
+                    List<Entry> startsWith = aggregatorRestClient.getWordsStartingWith(c);
+                    List<Entry> endsWith = aggregatorRestClient.getWordsEndingWith(c);
+
+                    // keep entries that exist in both lists
+                    List<Entry> startsAndEndsWith = new ArrayList<>(startsWith);
+                    startsAndEndsWith.retainAll(endsWith);
+
+                    // store list with existing entries
+                    candidates.addAll(startsAndEndsWith);
+
+                });
+
+        return candidates.stream()
+                .filter(entry -> {
+                    String word = entry.getWord();
+                    String reverse = new StringBuilder(word).reverse()
+                            .toString();
+                    return word.equals(reverse);
+                })
+                .sorted()
+                .collect(Collectors.toList());
     }
 
 }
